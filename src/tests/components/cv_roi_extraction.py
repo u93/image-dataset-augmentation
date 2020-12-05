@@ -45,7 +45,9 @@ def roi_extraction(roi_points: list, numpy_frame: np.ndarray):
         print(x_start_interval, y_start_interval)
         masked_out = np.roll(base_masked_out, (x_start_interval, 0), axis=(1, 0))  # Add shifting capabilities to the image
         desired_images.append(masked_out)
-        frame_scan(masked_out)
+
+        frame_mask_scan(masked_out)
+
         for y_index in range(0, LOCAL_Y_AXIS_ITERATIONS):
             print(x_start_interval, y_start_interval)
             masked_out = np.roll(base_masked_out, (x_start_interval, y_start_interval), axis=(0, 1))   # Add shifting capabilities to the image
@@ -102,20 +104,45 @@ def frame_extraction(image_path=None):
     view_image(desired_image)
 
 
-def frame_scan(numpy_frame: np.ndarray):
-    previous_value = None
+def frame_mask_scan(numpy_frame: np.ndarray):
     current_value = None
+    previous_value = None
+    threshold_value = 0
 
     # Columns 0 -> Last
+    column_indexes = list()
     limit = numpy_frame.shape[1]
     for i in range(0, limit):
-        if np.count_nonzero(numpy_frame[:, i]) != 0:
-            print(i)
-            # print(np.count_nonzero(numpy_frame[:, i]))
+        current_value = np.count_nonzero(numpy_frame[:, i])
+        if current_value != 0:
+            column_indexes.append(i)
+        previous_value = current_value
+        if len(column_indexes) > 0 and previous_value == threshold_value and previous_value == threshold_value:
+            break
+
+    start_x = column_indexes[1]
+    end_x = column_indexes[-1]
+
+    current_value = None
+    previous_value = None
+    threshold_value = 0
 
     # Rows 0 -> Last
+    row_indexes = list()
     limit = numpy_frame.shape[0]
     for i in range(0, limit):
-        if np.count_nonzero(numpy_frame[i, :]) != 0:
-            print(i)
-            # print(np.count_nonzero(numpy_frame[:, i]))
+        current_value = np.count_nonzero(numpy_frame[i, :])
+        if current_value != 0:
+            row_indexes.append(i)
+        previous_value = current_value
+        if len(row_indexes) > 0 and previous_value == threshold_value and previous_value == threshold_value:
+            break
+
+    start_y = row_indexes[1]
+    end_y = row_indexes[-1]
+
+    print(start_x, end_x, start_y, end_y)
+    roi_centroid = (round((start_x + end_x) / 2), round((start_y + end_y) / 2))
+    print(roi_centroid)
+    
+    return start_x, end_x, start_y, end_y
